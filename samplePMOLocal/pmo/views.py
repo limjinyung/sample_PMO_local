@@ -12,7 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 # Create your views here.
 @api_view(['GET'])
-def pmo_list(request):
+def task_list(request):
     if request.method == 'GET':
         tasks = Task.objects.all()
 
@@ -21,13 +21,37 @@ def pmo_list(request):
 
 
 @api_view(['GET'])
-def pmo_detail(request,pk):
+def task_detail(request, pk):
 
     try:
-        specific_task = Task.objects.get(pk=pk)
+        specific_task = Task.objects.get(id=pk)
     except ObjectDoesNotExist:
         return JsonResponse({'message': 'The task does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        specific_task = Task.objects.get(pk=pk)
-        return JsonResponse(specific_task.data)
+        specific_task = Task.objects.get(id=pk)
+        specific_task_serialzer = TaskSerialzer(specific_task)
+        return JsonResponse(specific_task_serialzer.data)
+
+
+@api_view(['GET'])
+def developer_list(request):
+    if request.method == 'GET':
+        developers = Developer.objects.all()
+
+        developer_serializer = DeveloperSerialzer(developers, many=True)
+        return JsonResponse(developer_serializer.data, safe=False)
+
+
+@api_view(['GET'])
+def developer_detail(request, pk):
+
+    try:
+        specific_developer = Developer.objects.get(id=pk)
+    except ObjectDoesNotExist:
+        return JsonResponse({'message': 'This developer does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        specific_developer = Developer.objects.get(id=pk)
+        specific_developer_serialzer = DeveloperSerialzer(specific_developer)
+        return JsonResponse(specific_developer_serialzer.data)

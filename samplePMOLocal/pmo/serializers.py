@@ -6,10 +6,10 @@ class TaskSerialzer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ('name','description')
+        fields = ('id', 'name','description')
 
 
 class DeveloperSerialzer(serializers.ModelSerializer):
     class Meta:
         model = Developer
-        fields = ('name', 'task', 'position')
+        fields = ('id', 'name', 'task', 'position')

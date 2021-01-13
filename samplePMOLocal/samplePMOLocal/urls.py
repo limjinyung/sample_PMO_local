@@ -21,6 +21,6 @@ from .schema import schema
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url(r'^', include('pmo.urls')),
+    url(r'', include('pmo.urls')),
     path('graphql/', GraphQLView.as_view(schema=schema, graphiql=True))
 ]
