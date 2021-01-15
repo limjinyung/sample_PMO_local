@@ -17,12 +17,11 @@ class DeveloperSerialzer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    permissions = serializers.PrimaryKeyRelatedField(many=True, queryset=Permission.objects.all())
-    print(permissions)
+    # permissions = serializers.PrimaryKeyRelatedField(many=True, queryset=Permission.objects.all())
 
     class Meta:
         model = User
-        fields = ['username','email','is_staff','permissions']
+        fields = ('username', 'email', 'permissions', 'isStaff')
         # fields = ('username', 'email', 'is_staff')
 
 

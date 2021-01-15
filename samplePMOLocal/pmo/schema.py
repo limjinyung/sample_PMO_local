@@ -73,6 +73,42 @@ class UserType(DjangoObjectType):
         fields = "__all__"
 
 
+class AddPermission(graphene.Mutation):
+    class Arguments:
+        id = graphene.String()
+        permission_id = graphene.String()
+
+    user = graphene.Field(UserType)
+
+    def mutate(cls, root, id, permission_id=None):
+        user = User.objects.get(id=id)
+
+        if permission_id is not None:
+            permission = Permission.objects.get(id=permission_id)
+            user.user_permissions.add(permission)
+            user.save()
+
+        return AddPermission(user=user)
+
+
+class DeletePermission(graphene.Mutation):
+    class Arguments:
+        id = graphene.String()
+        permission_id = graphene.String()
+
+    user = graphene.Field(UserType)
+
+    def mutate(cls, root, id, permission_id=None):
+        user = User.objects.get(id=id)
+
+        if permission_id is not None:
+            permission = Permission.objects.get(id=permission_id)
+            user.user_permissions.remove(permission)
+            user.save()
+
+        return DeletePermission(user=user)
+
+
 class GroupType(DjangoObjectType):
     class Meta:
         model = Group
@@ -96,7 +132,10 @@ class Query(graphene.ObjectType):
     user_search = graphene.List(UserType, id=graphene.String())
 
     groups = graphene.List(GroupType)
+    group_search = graphene.List(GroupType, id=graphene.String())
+
     permission = graphene.List(PermissionType)
+    permission_search = graphene.List(PermissionType, id=graphene.String())
 
     def resolve_all_tasks(self, info, **kwargs):
         return Task.objects.all()
@@ -122,11 +161,21 @@ class Query(graphene.ObjectType):
     def resolve_groups(self, info, **kwargs):
         return Group.objects.all()
 
+    def resolve_group_search(self, info, **kwargs):
+        id = kwargs.get("id", "")
+        return Group.objects.filter(id=id)
+
     def resolve_permission(self, info, **kwargs):
         return Permission.objects.all()
+
+    def resolve_permission_search(self, info, **kwargs):
+        id = kwargs.get("id", "")
+        return Permission.objects.filter(id=id)
 
 
 class Mutation(graphene.ObjectType):
     create_task = CreateTask.Field()
     update_task = UpdateTask.Field()
     delete_task = DeleteTask.Field()
+    add_permission = AddPermission.Field()
+    delete_permission = DeletePermission.Field()

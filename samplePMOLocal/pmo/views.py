@@ -67,29 +67,6 @@ def user_view(request):
 
 
 @api_view(['GET'])
-def user_permission(request, pk):
-
-    try:
-        user = User.objects.get(id=pk)
-    except ObjectDoesNotExist:
-        return JsonResponse({'message': 'This permission does not exist'}, status=status.HTTP_404_NOT_FOUND)
-
-    user = User.objects.get(id=pk)
-    user_serializer = UserSerializer(user)
-    return JsonResponse(user_serializer.data)
-
-
-class UserList(generics.ListAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-
-class UserDetail(generics.RetrieveAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-
-@api_view(['GET'])
 def group_view(request):
     group_list = Group.objects.all()
     group_serializer = GroupSerializer(group_list)
