@@ -1,8 +1,19 @@
 import graphene
-
 import pmo.schema as pmo_schema
 
-class Query(pmo_schema.Query, graphene.ObjectType):
-    pass
 
-schema = graphene.Schema(query=Query)
+class Task(graphene.ObjectType):
+    name = graphene.String()
+    description = graphene.String()
+
+
+class PmoMutations(graphene.ObjectType):
+    create_task = pmo_schema.CreateTask.Field()
+    update_task = pmo_schema.UpdateTask.Field()
+    delete_task = pmo_schema.DeleteTask.Field()
+
+
+class Query(pmo_schema.Query, graphene.ObjectType):
+    task = graphene.Field(Task)
+
+schema = graphene.Schema(query=Query, mutation=PmoMutations)

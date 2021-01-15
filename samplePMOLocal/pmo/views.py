@@ -1,13 +1,15 @@
 from django.shortcuts import render
 from django.http.response import JsonResponse
 from rest_framework.parsers import JSONParser
-from rest_framework import status
+from rest_framework import status, generics
 
 from .models import Task, Developer
-from .serializers import TaskSerialzer, DeveloperSerialzer
+from .serializers import TaskSerialzer, DeveloperSerialzer, UserSerializer, GroupSerializer, PermissionSerializer
 from rest_framework.decorators import api_view
 
 from django.core.exceptions import ObjectDoesNotExist
+
+from django.contrib.auth.models import User, Group, Permission
 
 
 # Create your views here.
@@ -55,3 +57,47 @@ def developer_detail(request, pk):
         specific_developer = Developer.objects.get(id=pk)
         specific_developer_serialzer = DeveloperSerialzer(specific_developer)
         return JsonResponse(specific_developer_serialzer.data)
+
+
+@api_view(['GET'])
+def user_view(request):
+    user_list = User.objects.all()
+    user_serializer = UserSerializer(user_list)
+    return JsonResponse(user_serializer.data)
+
+
+@api_view(['GET'])
+def user_permission(request, pk):
+
+    try:
+        user = User.objects.get(id=pk)
+    except ObjectDoesNotExist:
+        return JsonResponse({'message': 'This permission does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+    user = User.objects.get(id=pk)
+    user_serializer = UserSerializer(user)
+    return JsonResponse(user_serializer.data)
+
+
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class UserDetail(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+@api_view(['GET'])
+def group_view(request):
+    group_list = Group.objects.all()
+    group_serializer = GroupSerializer(group_list)
+    return JsonResponse(group_serializer.data)
+
+
+@api_view(['GET'])
+def permission_view(request):
+    permission_list = Permission.objects.all()
+    permission_serializer = PermissionSerializer(permission_list)
+    return JsonResponse(permission_serializer.data)

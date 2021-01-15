@@ -4,3 +4,4 @@ djongo
 sqlparse==0.2.4
 graphene-django
 django-graphiql
+django-filter>=2
