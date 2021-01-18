@@ -1,4 +1,7 @@
 from django.db import models
+from faker import Faker
+
+fake = Faker()
 
 
 # Create your models here.
@@ -22,3 +25,7 @@ class Developer(models.Model):
 
     def __str__(self):
         return '%s %s %s' % (self.name, self.task, self.position)
+
+
+# Dummy data
+

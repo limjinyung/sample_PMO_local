@@ -4,10 +4,22 @@ from graphene_django import DjangoObjectType
 from .models import Task, Developer
 from django.contrib.auth.models import User, Group, Permission
 
+import django_filters
+from graphene_django.filter import DjangoFilterConnectionField
+
+POSITIONS = (
+        ('PM', 'Project Manager'),
+        ('QA', 'Quality Assurance'),
+        ('SD', 'Software Developer'),
+)
+
 
 class TaskType(DjangoObjectType):
     class Meta:
         model = Task
+        filter_fields = {
+            'name': ['exact','icontains','istartswith']
+        }
         fields = "__all__"
 
 
@@ -62,9 +74,42 @@ class DeleteTask(graphene.Mutation):
 
 
 class DeveloperType(DjangoObjectType):
+    task = graphene.List(TaskType)
+
+    @graphene.resolve_only_args
+    def resolve_task(self):
+        return self.task.all()
+
     class Meta:
         model = Developer
         fields = "__all__"
+
+
+class CreateDeveloper(graphene.Mutation):
+    class Arguments:
+        # input arguments for this mutations
+        name = graphene.String(required=True)
+        task_list = graphene.List(graphene.Int)
+        position = graphene.String()
+
+    ok = graphene.Boolean()
+    developer = graphene.Field(DeveloperType)
+
+    @classmethod
+    def mutate(cls, root, info, name, task_list, position):
+
+        if not any(position in i for i in POSITIONS):
+            raise Exception('Invalid position!')
+
+        developer = Developer.objects.create(name=name, position=position)
+
+        for task in task_list:
+            input_task = Task.objects.get(id=task)
+            developer.task.add(input_task)
+        ok = True
+        developer.save()
+
+        return CreateDeveloper(developer=developer, ok=ok)
 
 
 class UserType(DjangoObjectType):
@@ -122,11 +167,12 @@ class PermissionType(DjangoObjectType):
 
 
 class Query(graphene.ObjectType):
-    all_tasks = graphene.List(TaskType)
-    task = graphene.List(TaskType, id=graphene.String())
+
+    all_tasks = graphene.List(TaskType, first=graphene.Int(), orderBy=graphene.List(of_type=graphene.String))
+    task = graphene.List(TaskType, id=graphene.String(), name=graphene.String())
 
     all_developers = graphene.List(DeveloperType)
-    developer = graphene.List(DeveloperType, id=graphene.String())
+    developer = graphene.List(DeveloperType, id=graphene.String(), name=graphene.String())
 
     users = graphene.List(UserType)
     user_search = graphene.List(UserType, id=graphene.String())
@@ -137,8 +183,17 @@ class Query(graphene.ObjectType):
     permission = graphene.List(PermissionType)
     permission_search = graphene.List(PermissionType, id=graphene.String())
 
-    def resolve_all_tasks(self, info, **kwargs):
-        return Task.objects.all()
+    def resolve_all_tasks(self, info, first=None, **kwargs):
+        ts = Task.objects.all()
+        orderBy = kwargs.get('orderBy', None)
+
+        if first:
+            ts = ts[:first]
+
+        if orderBy:
+            return Task.objects.order_by(*orderBy)
+
+        return ts
 
     def resolve_task(self, info, **kwargs):
         id = kwargs.get("id", "")
@@ -149,14 +204,16 @@ class Query(graphene.ObjectType):
 
     def resolve_developer(self, info, **kwargs):
         id = kwargs.get("id", "")
-        return Developer.objects.filter(id=id)
+        name = kwargs.get("name", "")
+        return Developer.objects.filter(id=id, name=name)
 
     def resolve_users(self, info, **kwargs):
         return User.objects.all()
 
     def resolve_user_search(self, info, **kwargs):
         id = kwargs.get("id", "")
-        return User.objects.filter(id=id)
+        name = kwargs.get("name", "")
+        return User.objects.filter(id=id, name=name)
 
     def resolve_groups(self, info, **kwargs):
         return Group.objects.all()
@@ -177,5 +234,8 @@ class Mutation(graphene.ObjectType):
     create_task = CreateTask.Field()
     update_task = UpdateTask.Field()
     delete_task = DeleteTask.Field()
+
     add_permission = AddPermission.Field()
     delete_permission = DeletePermission.Field()
+
+    create_developer = CreateDeveloper.Field()
