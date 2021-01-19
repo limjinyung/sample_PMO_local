@@ -1,7 +1,9 @@
 from django.shortcuts import render
-from django.http.response import JsonResponse
+from django.http.response import JsonResponse, HttpResponse
 from rest_framework.parsers import JSONParser
 from rest_framework import status, generics
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .models import Task, Developer
 from .serializers import TaskSerialzer, DeveloperSerialzer, UserSerializer, GroupSerializer, PermissionSerializer
@@ -11,29 +13,60 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from django.contrib.auth.models import User, Group, Permission
 
+from sgqlc.operation import Operation
+from sgqlc.endpoint.http import HTTPEndpoint
+from .graphql_sgqlc import Query
+
+query = Operation(Query)
 
 # Create your views here.
+
 @api_view(['GET'])
 def task_list(request):
-    if request.method == 'GET':
-        tasks = Task.objects.all()
 
-        task_serializer = TaskSerialzer(tasks, many=True)
-        return JsonResponse(task_serializer.data, safe=False)
+    query.allTasks()
+    endpoint = HTTPEndpoint(url='http://localhost:8000/graphql/')
+    print(endpoint)
+    result = endpoint(query=query)
+    print(result)
+
+    return JsonResponse(result)
+
+    # if request.method == 'GET':
+    #     tasks = Task.objects.all()
+    #
+    #     task_serializer = TaskSerialzer(tasks, many=True)
+    #     return JsonResponse(task_serializer.data, safe=False)
 
 
 @api_view(['GET'])
 def task_detail(request, pk):
 
-    try:
-        specific_task = Task.objects.get(id=pk)
-    except ObjectDoesNotExist:
-        return JsonResponse({'message': 'The task does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    query.task(id=str(pk))
+    query.task.edges()
+    query.task.page_info()
 
-    if request.method == 'GET':
-        specific_task = Task.objects.get(id=pk)
-        specific_task_serialzer = TaskSerialzer(specific_task)
-        return JsonResponse(specific_task_serialzer.data)
+    print(query)
+
+    endpoint = HTTPEndpoint(url='http://localhost:8000/graphql/')
+    print(endpoint)
+    print("query:")
+    print(query)
+    result = endpoint(query=query)
+    print("========")
+    print(result)
+
+    return JsonResponse(result)
+
+    # try:
+    #     specific_task = Task.objects.get(id=pk)
+    # except ObjectDoesNotExist:
+    #     return JsonResponse({'message': 'The task does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    #
+    # if request.method == 'GET':
+    #     specific_task = Task.objects.get(id=pk)
+    #     specific_task_serialzer = TaskSerialzer(specific_task)
+    #     return JsonResponse(specific_task_serialzer.data)
 
 
 @api_view(['GET'])

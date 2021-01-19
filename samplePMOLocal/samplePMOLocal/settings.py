@@ -25,7 +25,7 @@ SECRET_KEY = '(cblyg5xc77cxt@)kx6*bpda-n0c(5$q+*&#a!#90m#(#tyagc'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -127,5 +127,9 @@ STATIC_URL = '/static/'
 # GraphQL setting
 
 GRAPHENE = {
-    'SCHEMA': 'src.schema.schema'
+    'SCHEMA': 'samplePMOLocal.schema.schema'
 }
+
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_SECURE = False

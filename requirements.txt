@@ -6,3 +6,5 @@ graphene-django
 django-graphiql
 django-filter>=2
 faker
+sgqlc
+httpie

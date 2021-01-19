@@ -1,4 +1,5 @@
 import graphene
+from graphene import relay
 from graphene_django import DjangoObjectType
 
 from .models import Task, Developer
@@ -21,6 +22,7 @@ class TaskType(DjangoObjectType):
             'name': ['exact','icontains','istartswith']
         }
         fields = "__all__"
+        interfaces = (relay.Node,)
 
 
 class CreateTask(graphene.Mutation):

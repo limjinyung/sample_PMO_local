@@ -2,9 +2,9 @@ import graphene
 import pmo.schema as pmo_schema
 
 
-# class Task(graphene.ObjectType):
-#     name = graphene.String()
-#     description = graphene.String()
+class Task(graphene.ObjectType):
+    name = graphene.String()
+    description = graphene.String()
 
 
 class PmoMutations(graphene.ObjectType):
@@ -24,4 +24,5 @@ class Query(pmo_schema.Query, graphene.ObjectType):
 
 
 schema = graphene.Schema(query=Query, mutation=PmoMutations)
+
 
