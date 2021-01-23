@@ -8,3 +8,4 @@ django-filter>=2
 faker
 sgqlc
 httpie
+django-cors-headers

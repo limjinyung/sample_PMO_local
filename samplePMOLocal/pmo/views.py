@@ -17,17 +17,18 @@ from sgqlc.operation import Operation
 from sgqlc.endpoint.http import HTTPEndpoint
 from .graphql_sgqlc import Query
 
-query = Operation(Query)
 
 # Create your views here.
 
 @api_view(['GET'])
 def task_list(request):
 
+    query = Operation(Query)
     query.allTasks()
     endpoint = HTTPEndpoint(url='http://localhost:8000/graphql/')
     print(endpoint)
     result = endpoint(query=query)
+    print("result: ")
     print(result)
 
     return JsonResponse(result)
@@ -42,19 +43,13 @@ def task_list(request):
 @api_view(['GET'])
 def task_detail(request, pk):
 
-    query.task(id=str(pk))
-    query.task.edges()
-    query.task.page_info()
-
-    print(query)
+    query = Operation(Query)
+    query.taskNode(id=str(pk))
+    query.taskNode.edges()
+    query.taskNode.page_info()
 
     endpoint = HTTPEndpoint(url='http://localhost:8000/graphql/')
-    print(endpoint)
-    print("query:")
-    print(query)
     result = endpoint(query=query)
-    print("========")
-    print(result)
 
     return JsonResponse(result)
 
@@ -71,25 +66,49 @@ def task_detail(request, pk):
 
 @api_view(['GET'])
 def developer_list(request):
-    if request.method == 'GET':
-        developers = Developer.objects.all()
 
-        developer_serializer = DeveloperSerialzer(developers, many=True)
-        return JsonResponse(developer_serializer.data, safe=False)
+    query = Operation(Query)
+    query.allDevelopers()
+    endpoint = HTTPEndpoint(url='http://localhost:8000/graphql/')
+    print(endpoint)
+    result = endpoint(query=query)
+    print("result: ")
+    print(result)
+
+    return JsonResponse(result)
+
+    # if request.method == 'GET':
+    #     developers = Developer.objects.all()
+    #
+    #     developer_serializer = DeveloperSerialzer(developers, many=True)
+    #     return JsonResponse(developer_serializer.data, safe=False)
 
 
 @api_view(['GET'])
 def developer_detail(request, pk):
 
-    try:
-        specific_developer = Developer.objects.get(id=pk)
-    except ObjectDoesNotExist:
-        return JsonResponse({'message': 'This developer does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    # try:
+    #     specific_developer = Developer.objects.get(id=pk)
+    # except ObjectDoesNotExist:
+    #     return JsonResponse({'message': 'This developer does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    #
+    # if request.method == 'GET':
+    #     specific_developer = Developer.objects.get(id=pk)
+    #     specific_developer_serialzer = DeveloperSerialzer(specific_developer)
+    #     return JsonResponse(specific_developer_serialzer.data)
 
-    if request.method == 'GET':
-        specific_developer = Developer.objects.get(id=pk)
-        specific_developer_serialzer = DeveloperSerialzer(specific_developer)
-        return JsonResponse(specific_developer_serialzer.data)
+    query = Operation(Query)
+    query.developerNode(id=str(pk))
+    query.developerNode.edges()
+
+    print(query)
+
+    endpoint = HTTPEndpoint(url='http://localhost:8000/graphql/')
+    print(endpoint)
+    result = endpoint(query=query)
+    print(result)
+
+    return JsonResponse(result)
 
 
 @api_view(['GET'])

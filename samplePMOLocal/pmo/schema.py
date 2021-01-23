@@ -19,9 +19,9 @@ class TaskType(DjangoObjectType):
     class Meta:
         model = Task
         filter_fields = {
-            'name': ['exact','icontains','istartswith']
+            'name': ['exact','icontains','istartswith'],
+            'description': ['exact', 'icontains', 'istartswith']
         }
-        fields = "__all__"
         interfaces = (relay.Node,)
 
 
@@ -84,7 +84,11 @@ class DeveloperType(DjangoObjectType):
 
     class Meta:
         model = Developer
-        fields = "__all__"
+        filter_fields = {
+            'name': ['exact','icontains','istartswith'],
+            'task': ['exact']
+        }
+        interfaces = (relay.Node,)
 
 
 class CreateDeveloper(graphene.Mutation):
@@ -172,9 +176,11 @@ class Query(graphene.ObjectType):
 
     all_tasks = graphene.List(TaskType, first=graphene.Int(), orderBy=graphene.List(of_type=graphene.String))
     task = graphene.List(TaskType, id=graphene.String(), name=graphene.String())
+    task_node = DjangoFilterConnectionField(TaskType, id=graphene.String())
 
     all_developers = graphene.List(DeveloperType)
     developer = graphene.List(DeveloperType, id=graphene.String(), name=graphene.String())
+    developer_node = DjangoFilterConnectionField(DeveloperType, id=graphene.String())
 
     users = graphene.List(UserType)
     user_search = graphene.List(UserType, id=graphene.String())
@@ -185,8 +191,9 @@ class Query(graphene.ObjectType):
     permission = graphene.List(PermissionType)
     permission_search = graphene.List(PermissionType, id=graphene.String())
 
-    def resolve_all_tasks(self, info, first=None, **kwargs):
+    def resolve_all_tasks(self, info, first=None, **kwargs): # first = None
         ts = Task.objects.all()
+
         orderBy = kwargs.get('orderBy', None)
 
         if first:
@@ -201,6 +208,13 @@ class Query(graphene.ObjectType):
         id = kwargs.get("id", "")
         return Task.objects.filter(id=id)
 
+    def resolve_task_node(self, info, **kwargs):
+        id = kwargs.get("id","")
+        return Task.objects.filter(id=id)
+
+    def resolve_all_tasks(root, info, **kwargs):
+        return Task.objects.all()
+
     def resolve_all_developers(self, info, **kwargs):
         return Developer.objects.all()
 
@@ -208,6 +222,10 @@ class Query(graphene.ObjectType):
         id = kwargs.get("id", "")
         name = kwargs.get("name", "")
         return Developer.objects.filter(id=id, name=name)
+
+    def resolve_developer_node(self, info, **kwargs):
+        id = kwargs.get("id","")
+        return Developer.objects.filter(id=id)
 
     def resolve_users(self, info, **kwargs):
         return User.objects.all()
